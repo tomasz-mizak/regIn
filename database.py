@@ -35,3 +35,6 @@ class Context():
 
     def query(self, sql_string):
         return pd.read_sql(sql_string, con=self.engine)
+
+    def insert(self, sql_string):
+        return self.engine.execute(sql_string)
