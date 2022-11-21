@@ -1,21 +1,19 @@
-import os
-from pprint import pprint
+import os, pandas, tqdm
 from cx_Oracle import init_oracle_client
 from sqlalchemy import create_engine, text
-import pandas as pd
 
-# import Config class from config.py - enviroment variables helper
+# Import Config class from config.py - enviroment variables helper
 from config import Config
 conf = Config()
 
-# initial settins
+# Initial settins
 DEBUG = conf.get('DEBUG')
 
-# initialize oracle client
+# Initialize InstantClient on NT systems
 if (os.name == 'nt'):
     init_oracle_client(conf.get('INSTANT_CLIENT'))
 
-# connection string - as easy to read format
+# Connection string - as easy to read format
 # .env keys USERNAME, PASSWORD, DATABASE_IP, DATABASE_PORT, DATABASE_NAME
 connection_string = "oracle+cx_oracle://%s:%s@%s:%s/?service_name=%s&encoding=UTF-8&nencoding=UTF-8" % (
     conf.get('USERNAME'), 
@@ -28,26 +26,34 @@ connection_string = "oracle+cx_oracle://%s:%s@%s:%s/?service_name=%s&encoding=UT
 if DEBUG:
     print(connection_string)
 
-# define engine for connection
+# Define engine for connection
 engine = create_engine(connection_string)
 
 # TODO: handle timeout and other erros and send log to zi@wpia.uni.lodz.pl
 
-# prepare connection
+# pbar definition
+pbar = None
+
+# Prepare connection
 with engine.connect() as conn:
-    # read sql from file to prepare as query
+    # Read instructions from file
     with open('script.sql', 'r', encoding='cp856') as f:
         query = text(f.read())
-        r = pd.read_sql(query, con=conn)
+        # Use pandas to fetch data
+        r = pandas.read_sql(query, con=conn)
+        # Initialize bpar
+        pbar = tqdm(total=r.shape[0])
+        # Display possible inserts
         print(f'Inserts todo: {r.shape[0]}')
+
         for i, r in r.iterrows():
-            print(f"{i+1}) ----------------")
-            ii = r[0].replace(';', '') # insert instruction
-            if DEBUG:
-                print(ii)
+            ii = r[0].replace(';', '') # insert instruction, remove semi-colon charcter from instruction
             try:
-                conn.execute(ii)
-                print("success!")
+                #conn.execute(ii)
+                pbar.update(1)
             except Exception as ex:
                 if (DEBUG):
                     print(ex.args)
+
+        # Close pbar
+        pbar.close()
