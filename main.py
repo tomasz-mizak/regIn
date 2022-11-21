@@ -1,3 +1,4 @@
+import os
 from pprint import pprint
 from cx_Oracle import init_oracle_client
 from sqlalchemy import create_engine, text
@@ -11,7 +12,8 @@ conf = Config()
 DEBUG = conf.get('DEBUG')
 
 # initialize oracle client
-# init_oracle_client(conf.get('INSTANT_CLIENT_PATH')) ? need this?
+if (os.name == 'nt'):
+    init_oracle_client(conf.get('INSTANT_CLIENT'))
 
 # connection string - as easy to read format
 # .env keys USERNAME, PASSWORD, DATABASE_IP, DATABASE_PORT, DATABASE_NAME
