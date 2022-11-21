@@ -36,7 +36,7 @@ engine = create_engine(connection_string)
 # prepare connection
 with engine.connect() as conn:
     # read sql from file to prepare as query
-    with open('script.sql') as f:
+    with open('script.sql', 'r', encoding='cp856') as f:
         query = text(f.read())
         r = pd.read_sql(query, con=conn)
         print(f'Inserts todo: {r.shape[0]}')
@@ -46,7 +46,7 @@ with engine.connect() as conn:
             if DEBUG:
                 print(ii)
             try:
-                conn.execute(r[0])
+                conn.execute(ii)
                 print("success!")
             except Exception as ex:
                 if (DEBUG):
